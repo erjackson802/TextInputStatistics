@@ -44,21 +44,30 @@ namespace CasellaTest.Controllers
                 //retrieve raw string from BODY of POST encoded as UTF-8
                 byte[] byteArray = Request.Content.ReadAsByteArrayAsync().Result;
                 string responseString = Encoding.UTF8.GetString(byteArray, 0, byteArray.Length);
-                                
-                Document doc = new Document(responseString);
-                doc.Process();
 
-                string jsonResponse = doc.GetJsonForTop(MAX_DEFAULT_RETURNED_WORDS);
+                if (!string.IsNullOrEmpty(responseString))
+                {
+                    Document doc = new Document(responseString);
+                    doc.Process();
 
-                HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.OK);
-                response.Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json");
+                    string jsonResponse = doc.GetJsonForTop(MAX_DEFAULT_RETURNED_WORDS);
 
-                return response;
+                    HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.OK);
+                    response.Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json");
+
+                    return response;
+                }
+                else
+                {
+                    HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.BadRequest);
+                    response.ReasonPhrase = "Empty Input String.";
+                    return response;
+                }
             }
             catch (Exception ex)
             {
                 HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.BadRequest);
-                response.RequestMessage.Content = new StringContent(ex.Message);
+                response.ReasonPhrase = ex.Message;
 
                 return response;
             }

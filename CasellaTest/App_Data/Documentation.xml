@@ -504,6 +504,12 @@
             Document object, containing a list of word items.
             </summary>
         </member>
+        <member name="M:CasellaTest.Models.Document.#ctor(System.String)">
+            <summary>
+            Default constructor.
+            </summary>
+            <param name="sText"></param>
+        </member>
         <member name="M:CasellaTest.Models.Document.Process">
             <summary>
             Separates each unique word from the SourceText into a WordItem in Words.
@@ -516,6 +522,26 @@
             </summary>
             <param name="iNumberOfResponses"> The maximum number of responses expected from an ordered list of word items </param>
             <returns></returns>
+        </member>
+        <member name="T:CasellaTest.Models.WordItem">
+            <summary>
+            Class to maintain unique Word items along with the frequency they appear.
+            </summary>
+        </member>
+        <member name="P:CasellaTest.Models.WordItem.Word">
+            <summary>
+            the word itself.
+            </summary>
+        </member>
+        <member name="P:CasellaTest.Models.WordItem.Frequency">
+            <summary>
+            frequency of appearance.
+            </summary>
+        </member>
+        <member name="M:CasellaTest.Models.WordItem.#ctor">
+            <summary>
+            Default constructor.
+            </summary>
         </member>
     </members>
 </doc>
