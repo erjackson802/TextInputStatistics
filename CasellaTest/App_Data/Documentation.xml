@@ -508,7 +508,7 @@
             <summary>
             Default constructor.
             </summary>
-            <param name="sText"></param>
+            <param name="argText"></param>
         </member>
         <member name="M:CasellaTest.Models.Document.Process">
             <summary>
@@ -520,7 +520,7 @@
                Creates a JSON string containing an ordered list of (iNumberOfResponses) items.  Ordered by frequency then 
                by Word alphabeticall
             </summary>
-            <param name="iNumberOfResponses"> The maximum number of responses expected from an ordered list of word items </param>
+            <param name="argNumberOfResponses"> The maximum number of responses expected from an ordered list of word items </param>
             <returns></returns>
         </member>
         <member name="T:CasellaTest.Models.WordItem">

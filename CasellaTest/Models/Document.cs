@@ -1,8 +1,6 @@
 ﻿using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 
 namespace CasellaTest.Models
 {/// <summary>
@@ -11,7 +9,6 @@ namespace CasellaTest.Models
     public class Document
     {
         private List<WordItem> Words { get; set; }
-        private string JsonString { get; set; }
         private int WhitespaceCount { get; set; }
         private int PunctuationCount { get; set; }
         private int WordCount { get; set; }
@@ -20,11 +17,10 @@ namespace CasellaTest.Models
         /// <summary>
         /// Default constructor.
         /// </summary>
-        /// <param name="sText"></param>
-        public Document(string sText)
+        /// <param name="argText"></param>
+        public Document(string argText)
         {
-            SourceText = sText;
-            JsonString = "";
+            SourceText = argText;
             WhitespaceCount = 0;
             PunctuationCount = 0;
             WordCount = 0;
@@ -40,9 +36,10 @@ namespace CasellaTest.Models
             //splits the SourceText into individual words and trims punctuation.
             char[] punctuation = SourceText.Where(char.IsPunctuation).Distinct().ToArray();
             List<string> tmpWords = SourceText.Split().Select(x => x.Trim(punctuation)).ToList();
-            
+
+            //for proper whitespace character count
+            SourceText = SourceText.Replace("\r\n", "\n");                      
             //Counts the amount of whitespace and punctuation
-            SourceText = SourceText.Replace("\r\n", "\n");                      //for proper whitespace character count
             WhitespaceCount = SourceText.Count(f => char.IsWhiteSpace(f));
             PunctuationCount = SourceText.Count(f => char.IsPunctuation(f));
                     
@@ -77,22 +74,22 @@ namespace CasellaTest.Models
         ///    Creates a JSON string containing an ordered list of (iNumberOfResponses) items.  Ordered by frequency then 
         ///    by Word alphabeticall
         /// </summary>
-        /// <param name="iNumberOfResponses"> The maximum number of responses expected from an ordered list of word items </param>
+        /// <param name="argNumberOfResponses"> The maximum number of responses expected from an ordered list of word items </param>
         /// <returns></returns>
-        public string GetJsonForTop(int iNumberOfResponses)
+        public string GetJsonForTop(int argNumberOfResponses)
         {
             //using OrderBy instead of Sort due to double sort parameters and possiblity for inaccurate results if a sort key has too
             // many common occurrences 
-            string sWords = JsonConvert.SerializeObject(Words.OrderByDescending(x => x.Frequency).ThenBy(x => x.Word).Take(iNumberOfResponses));
+            string sortedWords = JsonConvert.SerializeObject(Words.OrderByDescending(x => x.Frequency).ThenBy(x => x.Word).Take(argNumberOfResponses));
 
             //using decimal for its greater accuracy 
             decimal whitespacePercentage = (decimal)WhitespaceCount / SourceText.Length;
             decimal punctuationPercentage = (decimal)PunctuationCount / SourceText.Length;
 
-            string sOut = string.Format("{{ \"Frequency\": {0} , \"WordCount\": {1}, \"WhitespacePercentage\": {2}, \"PunctuationPercentage\":{3} }}", 
-                sWords, WordCount, whitespacePercentage, punctuationPercentage);
+            string jsonOut = string.Format("{{ \"Frequency\": {0} , \"WordCount\": {1}, \"WhitespacePercentage\": {2}, \"PunctuationPercentage\":{3} }}", 
+                sortedWords, WordCount, whitespacePercentage, punctuationPercentage);
             
-            return sOut;
+            return jsonOut;
         }
 
     }
