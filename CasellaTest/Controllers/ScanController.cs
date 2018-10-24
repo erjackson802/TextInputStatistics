@@ -9,30 +9,59 @@ using System.Web.Http;
 
 namespace CasellaTest.Controllers
 {
+    /// <summary>
+    /// Web Api Endpoint provided to Scan incoming raw text.
+    /// Accepts an HTTP POST used to scan raw incoming text data encoded UTF-8
+    /// </summary>
     public class ScanController : ApiController
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="value"></param>
+        private readonly int MAX_DEFAULT_RETURNED_WORDS = 50;       // defined constant for Max results from default POST
+                                                                    // could implement a parametered POST to get a custom
+                                                                    // number of results.
+
+
+        public ScanController()
+        {
+
+        }
+
         // POST: api/Scan
+        /// <summary>
+        ///
+        /// Responds with a JSON document content providing:
+        ///     1.  The 50 most frequently used words in the document along with their frequency.  Comparison
+        ///         is case insensitive.  Sorted by frequency then by word.
+        ///     2.  Total number of words in the document.
+        ///     3.  The percentage (decimal) of characters in the document that are whitespace.
+        ///     4.  The percentage (decimal) of characters in the document that are punctuation marks.
+        /// </summary>
+        /// <returns> Returns JSON document UTF-8 encoded in the content body of the HttpResponseMessage. </returns>
         [HttpPost]
         public HttpResponseMessage Post()
         {
-            //Input from POST Body (Text Raw)
-            //var sRaw = Request.Content.ReadAsStringAsync().Result;
+            try
+            {                         
+                //retrieve raw string from BODY of POST encoded as UTF-8
+                byte[] byteArray = Request.Content.ReadAsByteArrayAsync().Result;
+                string responseString = Encoding.UTF8.GetString(byteArray, 0, byteArray.Length);
+                                
+                Document doc = new Document(responseString);
+                doc.Process();
 
-            var byteArray = Request.Content.ReadAsByteArrayAsync().Result;
-            var responseString = Encoding.UTF8.GetString(byteArray, 0, byteArray.Length);
+                string jsonResponse = doc.GetJsonForTop(MAX_DEFAULT_RETURNED_WORDS);
 
-            Document doc = new Document(responseString);
-            doc.Process();                        
-            //Json Output
-            string jsonResponse = doc.GetJsonForTop(50);
-            var response = this.Request.CreateResponse(HttpStatusCode.OK);
-            response.Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json");
+                HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.OK);
+                response.Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json");
 
-            return response;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.BadRequest);
+                response.RequestMessage.Content = new StringContent(ex.Message);
+
+                return response;
+            }
         }
                       
         

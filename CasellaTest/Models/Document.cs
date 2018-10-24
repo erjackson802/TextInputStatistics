@@ -5,7 +5,9 @@ using System.Linq;
 using System.Web;
 
 namespace CasellaTest.Models
-{
+{/// <summary>
+/// Document object, containing a list of word items.
+/// </summary>
     public class Document
     {
         private List<WordItem> Words { get; set; }
@@ -15,6 +17,10 @@ namespace CasellaTest.Models
         private int WordCount { get; set; }
         private string SourceText { get; set; }
 
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        /// <param name="sText"></param>
         public Document(string sText)
         {
             SourceText = sText;
@@ -27,34 +33,38 @@ namespace CasellaTest.Models
 
 
         /// <summary>
-        /// 
+        /// Separates each unique word from the SourceText into a WordItem in Words.
         /// </summary>
-        /// <param name="argText"></param>
-        /// <returns></returns>
         public void Process()
         {
+            //splits the SourceText into individual words and trims punctuation.
             char[] punctuation = SourceText.Where(char.IsPunctuation).Distinct().ToArray();
             List<string> tmpWords = SourceText.Split().Select(x => x.Trim(punctuation)).ToList();
-            SourceText = SourceText.Replace("\r\n", "\n");      //fix for proper character count
-
+            
+            //Counts the amount of whitespace and punctuation
+            SourceText = SourceText.Replace("\r\n", "\n");                      //for proper whitespace character count
             WhitespaceCount = SourceText.Count(f => char.IsWhiteSpace(f));
-            PunctuationCount = SourceText.Count(f => punctuation.Contains(f));
-            
-            
+            PunctuationCount = SourceText.Count(f => char.IsPunctuation(f));
+                    
+            //iterate through the separated words
             for (int i = 0; i < tmpWords.Count(); i++)
             {
                 WordItem currentWord = new WordItem() { Word = tmpWords.ElementAt(i).ToLower(), Frequency = 1 };
-
+                
+                //iterate through the remaining words 
                 for (int j = i + 1; j < tmpWords.Count(); j++)
                 {
+                    //if a match to currentWord is found, increment frequency and remove the match.
+                    //  decrement the remaining words index as the list has shortened.
                     if (tmpWords.ElementAt(j).ToLower().Equals(currentWord.Word.ToLower()))
                     {
-                        currentWord.Frequency += 1;
+                        currentWord.Frequency++;
                         tmpWords.RemoveAt(j);
                         j--;
                     }
                 }
 
+                //if not a whitespace WordItem add to our Words List and increment WordCount with the frequency of this new WordItem
                 if (!string.IsNullOrWhiteSpace(currentWord.Word))
                 {
                     Words.Add(currentWord);
@@ -63,18 +73,24 @@ namespace CasellaTest.Models
             }
         }
 
+        /// <summary>
+        ///    Creates a JSON string containing an ordered list of (iNumberOfResponses) items.  Ordered by frequency then 
+        ///    by Word alphabeticall
+        /// </summary>
+        /// <param name="iNumberOfResponses"> The maximum number of responses expected from an ordered list of word items </param>
+        /// <returns></returns>
         public string GetJsonForTop(int iNumberOfResponses)
         {
+            //using OrderBy instead of Sort due to double sort parameters and possiblity for inaccurate results if a sort key has too
+            // many common occurrences 
+            string sWords = JsonConvert.SerializeObject(Words.OrderByDescending(x => x.Frequency).ThenBy(x => x.Word).Take(iNumberOfResponses));
 
-            string sWords = JsonConvert.SerializeObject(Words.OrderByDescending(x => x.Frequency).ThenBy(x => x.Word));
-
+            //using decimal for its greater accuracy 
             decimal whitespacePercentage = (decimal)WhitespaceCount / SourceText.Length;
             decimal punctuationPercentage = (decimal)PunctuationCount / SourceText.Length;
-            
-            string sFooter = string.Format("\"WordCount\": {0}, \"WhitespacePercentage\": {1}, \"PunctuationPercentage\":{2}", 
-                WordCount, whitespacePercentage, punctuationPercentage);
 
-            string sOut = string.Format("{{ \"Frequency\": {0} , {1} }}", sWords, sFooter);
+            string sOut = string.Format("{{ \"Frequency\": {0} , \"WordCount\": {1}, \"WhitespacePercentage\": {2}, \"PunctuationPercentage\":{3} }}", 
+                sWords, WordCount, whitespacePercentage, punctuationPercentage);
             
             return sOut;
         }
